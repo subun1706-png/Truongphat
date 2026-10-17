@@ -1,0 +1,143 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TRUONGPHAT.NET</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0d0d16;color:white;font-family:Arial,sans-serif;padding:18px}
+main{max-width:430px;margin:35px auto;background:#191927;padding:24px;border-radius:20px;border:1px solid #34344b}
+h1{text-align:center;color:#ff416c}
+p{text-align:center;color:#c5c5d8}
+input,button{width:100%;padding:14px;margin-top:12px;border-radius:10px;font-size:16px}
+input{background:#10101b;color:white;border:1px solid #45455b}
+button{border:0;background:#ff416c;color:white;font-weight:bold}
+.secondary{background:#34344b}
+.hidden{display:none}
+.msg{text-align:center;margin-top:14px;color:#ffd166;overflow-wrap:anywhere}
+a{color:#65c8ff}
+</style>
+</head>
+<body>
+<main>
+<h1>TRUONGPHAT.NET</h1>
+<p>Đăng ký tài khoản và kích hoạt KEY</p>
+
+<section id="login">
+<input id="username" placeholder="Tên tài khoản">
+<input id="password" type="password" placeholder="Mật khẩu">
+<button onclick="register()">ĐĂNG KÝ</button>
+<button class="secondary" onclick="login()">ĐĂNG NHẬP</button>
+<div id="loginMsg" class="msg"></div>
+</section>
+
+<section id="home" class="hidden">
+<h2>Xin chào, <span id="name"></span>!</h2>
+<p>Nhập KEY để sử dụng</p>
+<input id="key" placeholder="Nhập KEY của bạn">
+<button onclick="activate()">KÍCH HOẠT KEY</button>
+<div id="keyMsg" class="msg"></div>
+
+<div id="unlocked" class="hidden">
+<button onclick="openTikTok()">MỞ TIKTOK</button>
+<p>Nhấn nút trên để mở TikTok.</p>
+</div>
+
+<button class="secondary" onclick="logout()">ĐĂNG XUẤT</button>
+</section>
+</main>
+
+<script>
+const U="TP_USERS",K="TP_KEYS",S="TP_SESSION";
+let current=localStorage.getItem(S)||"";
+
+function read(k){
+ try{return JSON.parse(localStorage.getItem(k)||"{}")}
+ catch(e){return {}}
+}
+function write(k,v){localStorage.setItem(k,JSON.stringify(v))}
+function msg(id,t){document.getElementById(id).textContent=t}
+
+function register(){
+ const u=document.getElementById("username").value.trim();
+ const p=document.getElementById("password").value;
+ if(!u||!p){msg("loginMsg","Nhập đủ tài khoản và mật khẩu.");return}
+ const users=read(U);
+ if(users[u]){msg("loginMsg","Tài khoản đã tồn tại.");return}
+ users[u]={password:p,key:""};
+ write(U,users);
+ msg("loginMsg","Đăng ký thành công. Hãy đăng nhập.");
+}
+
+function login(){
+ const u=document.getElementById("username").value.trim();
+ const p=document.getElementById("password").value;
+ const users=read(U);
+ if(!users[u]||users[u].password!==p){
+  msg("loginMsg","Sai tài khoản hoặc mật khẩu.");return
+ }
+ current=u;
+ localStorage.setItem(S,u);
+ showHome();
+}
+
+function showHome(){
+ document.getElementById("login").classList.add("hidden");
+ document.getElementById("home").classList.remove("hidden");
+ document.getElementById("name").textContent=current;
+ checkKey();
+}
+
+function checkKey(){
+ const users=read(U),keys=read(K);
+ const user=users[current];
+ let valid=false;
+ if(user&&user.key){
+  const k=keys[user.key];
+  valid=!!(k&&k.expiresAt>Date.now()&&(!k.usedBy||k.usedBy===current));
+ }
+ document.getElementById("unlocked").classList.toggle("hidden",!valid);
+ msg("keyMsg",valid?"KEY đang hoạt động.":"Vui lòng nhập KEY còn hạn.");
+}
+
+function activate(){
+ const value=document.getElementById("key").value.trim();
+ const users=read(U),keys=read(K);
+ const item=keys[value];
+ if(!item){msg("keyMsg","KEY không tồn tại.");return}
+ if(!item.expiresAt||item.expiresAt<=Date.now()){
+  msg("keyMsg","KEY đã hết hạn.");return
+ }
+ if(item.usedBy&&item.usedBy!==current){
+  msg("keyMsg","KEY đã được tài khoản khác sử dụng.");return
+ }
+ item.usedBy=current;
+ users[current].key=value;
+ write(K,keys);
+ write(U,users);
+ document.getElementById("unlocked").classList.remove("hidden");
+ msg("keyMsg","Kích hoạt KEY thành công!");
+}
+
+function openTikTok(){
+ window.open("https://www.tiktok.com/live","_blank","noopener");
+}
+
+function logout(){
+ current="";
+ localStorage.removeItem(S);
+ document.getElementById("home").classList.add("hidden");
+ document.getElementById("login").classList.remove("hidden");
+ msg("loginMsg","Đã đăng xuất.");
+}
+
+if(current){
+ const users=read(U);
+ if(users[current])showHome();
+ else localStorage.removeItem(S);
+}
+</script>
+</body>
+</html>
