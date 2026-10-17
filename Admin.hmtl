@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TRUONGPHAT ADMIN KEY</title>
+<style>
+body{font-family:Arial;background:#10121b;color:white;text-align:center;padding:20px}
+.box{max-width:400px;margin:30px auto;background:#202432;padding:22px;border-radius:15px}
+input,select,button{box-sizing:border-box;width:100%;padding:13px;margin:9px 0;border:0;border-radius:8px}
+button{background:#00d5ff;color:#111;font-weight:bold}
+#result{overflow-wrap:anywhere;color:#6cff9b}
+</style>
+</head>
+<body>
+<div class="box">
+<h2>TRUONGPHAT</h2>
+<h3>ADMIN KEY</h3>
+<input id="admin" type="password" placeholder="Mật khẩu Admin">
+<button onclick="login()">Đăng nhập Admin</button>
+<div id="panel" hidden>
+<input id="name" placeholder="Tên người nhận KEY">
+<select id="days">
+<option value="1">1 ngày</option>
+<option value="7">7 ngày</option>
+<option value="30">30 ngày</option>
+</select>
+<button onclick="createKey()">TẠO KEY</button>
+<p id="result"></p>
+<button onclick="copyKey()">SAO CHÉP KEY</button>
+</div>
+</div>
+<script>
+const ADMIN_PASSWORD = "DOI_MAT_KHAU_NAY";
+let currentKey = "";
+function login(){
+ if(document.getElementById("admin").value !== ADMIN_PASSWORD){
+  alert("Sai mật khẩu Admin!");
+  return;
+ }
+ document.getElementById("panel").hidden = false;
+}
+function createKey(){
+ const name=document.getElementById("name").value.trim();
+ if(!name){alert("Nhập tên người nhận KEY!");return;}
+ const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+ let code="";
+ for(let i=0;i<16;i++) code+=chars[Math.floor(Math.random()*chars.length)];
+ currentKey="TP-"+code;
+ const expiry=new Date();
+ expiry.setDate(expiry.getDate()+Number(document.getElementById("days").value));
+ document.getElementById("result").textContent=
+ "Người nhận: "+name+" | KEY: "+currentKey+
+ " | Hết hạn: "+expiry.toLocaleDateString("vi-VN");
+}
+function copyKey(){
+ if(!currentKey){alert("Hãy tạo KEY trước!");return;}
+ navigator.clipboard.writeText(currentKey)
+ .then(()=>alert("Đã sao chép KEY!"))
+ .catch(()=>alert("Hãy giữ vào KEY để sao chép: "+currentKey));
+}
+</script>
+</body>
+</html>
